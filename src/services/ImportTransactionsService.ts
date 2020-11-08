@@ -1,11 +1,11 @@
-import { getCustomRepository, getRepository, In } from 'typeorm';
+import { getRepository, In } from 'typeorm';
 import csvParse from 'csv-parse';
 import fs from 'fs';
 
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
 
-import TransactionsRepository from '../repositories/TransactionsRepository';
+// import TransactionsRepository from '../repositories/TransactionsRepository';
 
 interface CSVTransaction {
   title: string;
@@ -16,13 +16,13 @@ interface CSVTransaction {
 
 class ImportTransactionsService {
   async execute(filePath: string): Promise<Transaction[]> {
-    const transactionRepository = getCustomRepository(TransactionsRepository);
+    const transactionRepository = getRepository(Transaction);
     const categoriesRepository = getRepository(Category);
 
     const contactsReadStream = fs.createReadStream(filePath);
 
     const parsers = csvParse({
-      fromLine: 2,
+      from_line: 2,
     });
 
     const parseCsv = contactsReadStream.pipe(parsers);
@@ -46,8 +46,12 @@ class ImportTransactionsService {
     // return { categories, transactions };
 
     const existentCategories = await categoriesRepository.find({
-      where: In(categories),
+      where: { title: In(categories) },
     });
+
+    // console.log(existentCategories);
+
+    // return { existentCategories };
 
     const existentCategoriesTitles = existentCategories.map(
       (category: Category) => category.title,
